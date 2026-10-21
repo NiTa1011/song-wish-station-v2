@@ -1,73 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { themeConfig } from "@/config/themes";
 
-const themeConfig = {
-  halloween: {
-    colors: {
-      primary: "120 100% 25%",
-      background: "25 15% 8%",
-      foreground: "120 100% 85%",
-      accent: "33 100% 50%",
-      card: "25 20% 12%",
-      "card-foreground": "120 100% 85%",
-      border: "120 100% 20%",
-      muted: "25 15% 15%",
-      "muted-foreground": "120 50% 60%",
-    },
-    backgroundPattern: "radial-gradient(circle at 20% 50%, hsl(120 100% 10% / 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, hsl(33 100% 30% / 0.2) 0%, transparent 50%)",
-  },
-  fasching: {
-    colors: {
-      primary: "280 100% 60%",
-      background: "50 100% 97%",
-      foreground: "280 100% 20%",
-      accent: "340 100% 60%",
-      card: "0 0% 100%",
-      "card-foreground": "280 100% 20%",
-      border: "280 50% 80%",
-      muted: "50 100% 92%",
-      "muted-foreground": "280 50% 40%",
-      secondary: "160 100% 50%",
-      "secondary-foreground": "0 0% 100%",
-    },
-    backgroundPattern: "repeating-linear-gradient(45deg, hsl(280 100% 95%), hsl(280 100% 95%) 10px, hsl(340 100% 95%) 10px, hsl(340 100% 95%) 20px, hsl(160 100% 95%) 20px, hsl(160 100% 95%) 30px)",
-  },
-  default: {
-    colors: {
-      primary: "271 81% 56%",
-      background: "280 60% 96%",
-      foreground: "240 10% 25%",
-      accent: "330 81% 60%",
-      card: "0 0% 100%",
-      "card-foreground": "240 10% 25%",
-      border: "280 30% 88%",
-      muted: "280 40% 92%",
-      "muted-foreground": "240 5% 50%",
-    },
-    backgroundPattern: "none",
-  },
-};
-
-const applyTheme = (themeName: string) => {
-  const theme = themeConfig[themeName as keyof typeof themeConfig];
+export const applyTheme = (themeName: string) => {
+  const theme = themeConfig[themeName] || themeConfig.default;
   if (!theme) return;
 
   const root = document.documentElement;
   Object.entries(theme.colors).forEach(([key, value]) => {
     root.style.setProperty(`--${key}`, value);
   });
-  
+
+  if (theme.gradientPrimary) {
+    root.style.setProperty("--gradient-primary", theme.gradientPrimary);
+  }
+  if (theme.gradientButton) {
+    root.style.setProperty("--gradient-button", theme.gradientButton);
+  }
+
   // Apply background pattern
   if (theme.backgroundPattern && theme.backgroundPattern !== "none") {
     if (document.body) {
       document.body.style.backgroundImage = theme.backgroundPattern;
     }
-    root.style.setProperty('--background-pattern', theme.backgroundPattern);
+    root.style.setProperty("--background-pattern", theme.backgroundPattern);
   } else {
     if (document.body) {
       document.body.style.backgroundImage = "none";
     }
-    root.style.setProperty('--background-pattern', "none");
+    root.style.setProperty("--background-pattern", "none");
   }
 
   try {
@@ -78,29 +39,64 @@ const applyTheme = (themeName: string) => {
   }
 };
 
+export const setAppTheme = (themeName: string) => {
+  if (themeConfig[themeName]) {
+    applyTheme(themeName);
+    window.dispatchEvent(
+      new CustomEvent("app-theme-changed", { detail: themeName })
+    );
+  }
+};
+
 export const useActiveTheme = () => {
   const [activeTheme, setActiveTheme] = useState<string>(() => {
     try {
-      return localStorage.getItem("active-theme-name") || "default";
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlTheme = urlParams.get("theme");
+        if (urlTheme && themeConfig[urlTheme]) {
+          return urlTheme;
+        }
+        return localStorage.getItem("active-theme-name") || "default";
+      }
     } catch {
-      return "default";
+      // fallback
     }
+    return "default";
   });
 
+  const handleThemeUpdate = useCallback((themeName: string) => {
+    applyTheme(themeName);
+    setActiveTheme(themeName);
+  }, []);
+
   useEffect(() => {
-    // Apply cached theme immediately if present
+    // Apply cached or URL theme immediately
     try {
-      const cachedName = localStorage.getItem("active-theme-name");
-      if (cachedName) {
-        applyTheme(cachedName);
-      }
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlTheme = urlParams.get("theme");
+      const chosenTheme =
+        (urlTheme && themeConfig[urlTheme] && urlTheme) ||
+        localStorage.getItem("active-theme-name") ||
+        "default";
+      applyTheme(chosenTheme);
+      setActiveTheme(chosenTheme);
     } catch (e) {
       console.error(e);
     }
 
+    // Listen to local theme change events (e.g. from preview switcher or admin)
+    const handleCustomChange = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (customEvent.detail && themeConfig[customEvent.detail]) {
+        handleThemeUpdate(customEvent.detail);
+      }
+    };
+    window.addEventListener("app-theme-changed", handleCustomChange);
+
     fetchActiveTheme();
 
-    // Subscribe to theme changes
+    // Subscribe to theme changes via Supabase realtime
     const channel = supabase
       .channel("theme-changes")
       .on(
@@ -111,32 +107,38 @@ export const useActiveTheme = () => {
           table: "app_themes",
         },
         (payload) => {
-          if (payload.new.active) {
-            applyTheme(payload.new.theme_name);
-            setActiveTheme(payload.new.theme_name);
+          if (payload.new && payload.new.active) {
+            handleThemeUpdate(payload.new.theme_name);
           }
         }
       )
       .subscribe();
 
     return () => {
+      window.removeEventListener("app-theme-changed", handleCustomChange);
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [handleThemeUpdate]);
 
   const fetchActiveTheme = async () => {
-    const { data } = await supabase
-      .from("app_themes")
-      .select("theme_name")
-      .eq("active", true)
-      .maybeSingle();
+    try {
+      // If URL override is present, prioritize URL
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("theme")) return;
 
-    if (data) {
-      applyTheme(data.theme_name);
-      setActiveTheme(data.theme_name);
+      const { data } = await supabase
+        .from("app_themes")
+        .select("theme_name")
+        .eq("active", true)
+        .maybeSingle();
+
+      if (data && data.theme_name && themeConfig[data.theme_name]) {
+        handleThemeUpdate(data.theme_name);
+      }
+    } catch (e) {
+      console.error("Error fetching active theme from Supabase:", e);
     }
   };
 
   return activeTheme;
 };
-

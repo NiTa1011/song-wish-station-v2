@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Music2, LogIn } from "lucide-react";
+import { Music2, LogIn, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { ThemeDecorations } from "@/components/ThemeDecorations";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useActiveTheme, setAppTheme } from "@/hooks/useActiveTheme";
+import { themeConfig } from "@/config/themes";
 import {
   Select,
   SelectContent,
@@ -28,6 +30,7 @@ const MusicRequestForm = () => {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [isLoadingVenues, setIsLoadingVenues] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const activeTheme = useActiveTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -315,6 +318,26 @@ const MusicRequestForm = () => {
               </div>
             </form>
           )}
+        </div>
+
+        {/* Theme Quick Switcher */}
+        <div className="mt-6 flex items-center justify-center gap-1 p-1 bg-card/70 backdrop-blur-md rounded-full border border-border/60 shadow-sm max-w-fit mx-auto text-xs">
+          <Palette className="w-3.5 h-3.5 text-muted-foreground ml-2.5 mr-1" />
+          {Object.entries(themeConfig).map(([key, config]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setAppTheme(key)}
+              className={`px-3 py-1 rounded-full font-medium transition-all duration-200 ${
+                activeTheme === key
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <span className="mr-1">{config.icon}</span>
+              <span className="hidden sm:inline">{config.name.split(" ")[0]}</span>
+            </button>
+          ))}
         </div>
       </div>
     </div>
