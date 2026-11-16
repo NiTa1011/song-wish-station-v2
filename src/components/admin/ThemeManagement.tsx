@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Palette, CheckCircle2 } from "lucide-react";
 import { themeConfig } from "@/config/themes";
-import { applyTheme, setAppTheme } from "@/hooks/useActiveTheme";
+import { applyTheme, setGlobalTheme } from "@/hooks/useActiveTheme";
 
 interface Theme {
   id: string;
@@ -49,35 +49,29 @@ export const ThemeManagement = () => {
     }
   };
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleThemeChange = async (themeName: string) => {
-    if (!themeConfig[themeName]) return;
+    if (!themeConfig[themeName] || isSaving || themeName === activeTheme) return;
 
-    // Apply immediately to local state and UI
-    setActiveTheme(themeName);
-    setAppTheme(themeName);
+    setIsSaving(true);
+    const result = await setGlobalTheme(themeName);
+    setIsSaving(false);
 
-    try {
-      // Sync to database if reachable
-      await supabase
-        .from("app_themes")
-        .update({ active: false })
-        .neq("id", "00000000-0000-0000-0000-000000000000");
-
-      const { error } = await supabase
-        .from("app_themes")
-        .update({ active: true })
-        .eq("theme_name", themeName);
-
-      if (error) {
-        console.warn("Supabase theme update notice:", error);
-      }
-    } catch (e) {
-      console.warn("Supabase update error:", e);
+    if (!result.ok) {
+      console.error("Theme update failed:", result.error);
+      toast({
+        title: "Theme konnte nicht geändert werden",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
     }
 
+    setActiveTheme(themeName);
     toast({
       title: "Theme geändert",
-      description: `${themeConfig[themeName].name} aktiviert`,
+      description: `${themeConfig[themeName].name} ist jetzt für alle Besucher aktiv.`,
     });
   };
 
@@ -89,7 +83,7 @@ export const ThemeManagement = () => {
           <h3 className="text-xl font-semibold">Design-Verwaltung</h3>
         </div>
         <p className="text-sm text-muted-foreground mb-6">
-          Wähle ein atmosphärisches Thema für die Musikwunsch-Station aus. Änderungen werden in Echtzeit übernommen.
+          Wähle ein atmosphärisches Thema für die Musikwunsch-Station aus. Die Änderung gilt sofort für alle Besucher.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -99,7 +93,7 @@ export const ThemeManagement = () => {
             return (
               <Card
                 key={key}
-                className={`p-6 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
+                className={`p-6 transition-all ${isSaving ? "cursor-wait opacity-70" : "cursor-pointer"} duration-300 relative overflow-hidden group ${
                   isActive
                     ? "ring-2 ring-primary shadow-xl scale-[1.02] bg-primary/5"
                     : "hover:shadow-lg hover:scale-[1.01]"

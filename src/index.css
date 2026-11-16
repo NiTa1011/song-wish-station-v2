@@ -107,7 +107,6 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
     background-image: var(--background-pattern, none);
-    background-attachment: fixed;
     background-size: cover;
     background-repeat: no-repeat;
   }
@@ -115,39 +114,35 @@ All colors MUST be HSL.
 
 @layer utilities {
   .glass-card {
-    background: rgba(255, 255, 255, 0.45);
-    backdrop-filter: blur(16px) saturate(120%);
-    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    background: hsl(var(--card) / 0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.25);
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
   }
 
   .dark .glass-card {
     background: rgba(20, 20, 25, 0.55);
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
 
   .glass-input {
-    background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: hsl(var(--card) / 0.7);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   }
 
   .dark .glass-input {
     background: rgba(20, 20, 25, 0.6);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   }
   
   .glass-input:focus {
-    background: rgba(255, 255, 255, 0.7);
+    background: hsl(var(--card) / 0.9);
     border-color: hsl(var(--primary) / 0.5);
     box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15);
   }
@@ -206,18 +201,30 @@ All colors MUST be HSL.
     }
   }
 
+  /* transform instead of height: no layout/reflow on every frame */
   @keyframes eq-bounce {
     0% {
-      height: 15%;
+      transform: scaleY(0.15);
       opacity: 0.4;
     }
     50% {
-      height: 85%;
+      transform: scaleY(0.85);
       opacity: 0.9;
     }
     100% {
-      height: 35%;
+      transform: scaleY(0.35);
       opacity: 0.5;
+    }
+  }
+
+  @keyframes confetti-burst {
+    0% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--bx), var(--by)) scale(0);
+      opacity: 0;
     }
   }
 
@@ -311,6 +318,31 @@ All colors MUST be HSL.
       transform: translateY(105vh) rotateX(720deg) rotateY(360deg) rotateZ(360deg);
       opacity: 0.6;
     }
+  }
+
+  /*
+   * Lite mode for weak hardware (smartboards, whiteboards, old tablets).
+   * Enable with ?lite=1 in the URL (remembered), disable with ?lite=0.
+   * Stops all background animations and removes backdrop blur entirely.
+   */
+  html.lite .theme-decor,
+  html.lite .theme-decor * {
+    animation: none !important;
+  }
+
+  html.lite .theme-decor .burst {
+    display: none;
+  }
+
+  html.lite .glass-card,
+  html.lite .backdrop-blur-md,
+  html.lite .backdrop-blur-sm {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html.lite .glass-card {
+    background: hsl(var(--card) / 0.8);
   }
 
   @media (prefers-reduced-motion: reduce) {

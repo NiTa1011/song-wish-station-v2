@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut } from "lucide-react";
+import { LogOut, MonitorPlay, Home } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MusicRequestsList } from "@/components/admin/MusicRequestsList";
 import { UserManagement } from "@/components/admin/UserManagement";
@@ -183,73 +183,66 @@ const Admin = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-background">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-              Admin Dashboard
-            </h1>
-            <p className="text-muted-foreground">Verwaltung deiner Musikwünsche-App</p>
-          </div>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="gap-2 rounded-xl"
-          >
-            <LogOut className="w-4 h-4" />
-            Abmelden
-          </Button>
-        </div>
+  const tabTrigger = "rounded-lg px-3 py-1.5 data-[state=active]:bg-gradient-button data-[state=active]:text-white";
 
-        <Tabs defaultValue="requests" className="w-full animate-fade-in">
-          <TabsList className={`grid w-full transition-all gap-1 md:gap-2 bg-card/50 backdrop-blur-sm p-1 md:p-2 rounded-2xl text-xs md:text-sm ${isAdmin && canChangeTheme ? 'grid-cols-4' : isAdmin ? 'grid-cols-3' : canChangeTheme ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            <TabsTrigger value="requests" className="rounded-xl px-2 md:px-4 py-2 data-[state=active]:bg-gradient-button data-[state=active]:text-white">
-              <span className="hidden sm:inline">Musikwünsche</span>
-              <span className="sm:hidden">Wünsche</span>
-            </TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger value="users" className="rounded-xl px-2 md:px-4 py-2 data-[state=active]:bg-gradient-button data-[state=active]:text-white">
-                <span className="hidden sm:inline">Benutzerverwaltung</span>
-                <span className="sm:hidden">Benutzer</span>
-              </TabsTrigger>
-            )}
-            {isAdmin && (
-              <TabsTrigger value="venues" className="rounded-xl px-2 md:px-4 py-2 data-[state=active]:bg-gradient-button data-[state=active]:text-white">
-                Discos
-              </TabsTrigger>
-            )}
-            {canChangeTheme && (
-              <TabsTrigger value="themes" className="rounded-xl px-2 md:px-4 py-2 data-[state=active]:bg-gradient-button data-[state=active]:text-white">
-                Design
-              </TabsTrigger>
-            )}
-          </TabsList>
-          
-          <TabsContent value="requests" className="mt-6 animate-fade-in relative z-10">
+  return (
+    <div className="min-h-screen bg-background">
+      <Tabs defaultValue="requests" className="w-full">
+        {/* Sticky compact header: always reachable while scrolling long lists */}
+        <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur-sm">
+          <div className="max-w-5xl mx-auto px-4 md:px-6 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <h1 className="mr-auto text-xl font-extrabold bg-gradient-primary bg-clip-text text-transparent whitespace-nowrap">
+              Admin
+            </h1>
+
+            <div className="flex items-center gap-1.5 order-2 md:order-3">
+              <Button asChild variant="ghost" size="sm" className="gap-1.5 rounded-lg" title="Startseite">
+                <Link to="/"><Home className="w-4 h-4" /><span className="hidden lg:inline">Startseite</span></Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="gap-1.5 rounded-lg" title="Top-Wünsche fürs Whiteboard (neuer Tab)">
+                <a href="/top" target="_blank" rel="noopener noreferrer">
+                  <MonitorPlay className="w-4 h-4" /><span className="hidden lg:inline">Whiteboard</span>
+                </a>
+              </Button>
+              <Button onClick={handleLogout} variant="outline" size="sm" className="gap-1.5 rounded-lg">
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Abmelden</span>
+              </Button>
+            </div>
+
+            <TabsList className="order-3 md:order-2 w-full md:w-auto justify-start overflow-x-auto bg-muted/70 p-1 rounded-xl h-auto">
+              <TabsTrigger value="requests" className={tabTrigger}>Wünsche</TabsTrigger>
+              {isAdmin && <TabsTrigger value="users" className={tabTrigger}>Benutzer</TabsTrigger>}
+              {isAdmin && <TabsTrigger value="venues" className={tabTrigger}>Discos</TabsTrigger>}
+              {canChangeTheme && <TabsTrigger value="themes" className={tabTrigger}>Design</TabsTrigger>}
+            </TabsList>
+          </div>
+        </header>
+
+        <main className="max-w-5xl mx-auto px-4 md:px-6 py-5">
+          <TabsContent value="requests" className="mt-0">
             <MusicRequestsList canManageRequests={canManageRequests} />
           </TabsContent>
           
           {isAdmin && (
-            <TabsContent value="users" className="mt-6 animate-fade-in relative z-10">
+            <TabsContent value="users" className="mt-0">
               <UserManagement currentUserId={currentUserId} />
             </TabsContent>
           )}
 
           {isAdmin && (
-            <TabsContent value="venues" className="mt-6 animate-fade-in relative z-10">
+            <TabsContent value="venues" className="mt-0">
               <VenueManagement />
             </TabsContent>
           )}
 
           {canChangeTheme && (
-            <TabsContent value="themes" className="mt-6 animate-fade-in relative z-10">
+            <TabsContent value="themes" className="mt-0">
               <ThemeManagement />
             </TabsContent>
           )}
-        </Tabs>
-      </div>
+        </main>
+      </Tabs>
     </div>
   );
 };

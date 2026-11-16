@@ -2,7 +2,16 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, User as UserIcon, Plus, Pencil, Trash2 } from "lucide-react";
+import { Shield, User as UserIcon, Plus, Pencil, Trash2, Check, Minus } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +48,7 @@ export const UserManagement = ({ currentUserId }: UserManagementProps) => {
     can_change_theme: false,
     is_admin: false,
   });
+  const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -128,7 +138,12 @@ export const UserManagement = ({ currentUserId }: UserManagementProps) => {
     try {
       if (editingUser) {
         // Update existing user
-        const updateData: any = {
+        const updateData: {
+          username: string;
+          can_manage_requests: boolean;
+          can_change_theme: boolean;
+          password?: string;
+        } = {
           username: formData.username,
           can_manage_requests: formData.can_manage_requests,
           can_change_theme: formData.can_change_theme,
@@ -215,10 +230,6 @@ export const UserManagement = ({ currentUserId }: UserManagementProps) => {
       return;
     }
 
-    if (!confirm("Möchtest du diesen Benutzer wirklich löschen?")) {
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from("admin_users")
@@ -245,72 +256,96 @@ export const UserManagement = ({ currentUserId }: UserManagementProps) => {
 
   return (
     <>
-      <Card className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Alle Benutzer ({users.length})
-          </h2>
-          <Button
-            onClick={() => handleOpenDialog()}
-            className="bg-gradient-button hover:opacity-90"
-          >
-            <Plus className="w-4 h-4 mr-2" />
+      <Card className="rounded-2xl overflow-hidden">
+        <div className="flex justify-between items-center gap-3 p-4 md:p-5 border-b border-border/60">
+          <h2 className="text-lg font-bold">Benutzer ({users.length})</h2>
+          <Button onClick={() => handleOpenDialog()} size="sm" className="gap-1.5 rounded-lg bg-gradient-button hover:opacity-90">
+            <Plus className="w-4 h-4" />
             Neuer Benutzer
           </Button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {users.map((user) => (
-            <Card 
-              key={user.id}
-              className="p-4 hover:shadow-md transition-all"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  {user.role === "admin" ? (
-                    <Shield className="w-5 h-5 text-primary" />
-                  ) : (
-                    <UserIcon className="w-5 h-5 text-muted-foreground" />
-                  )}
-                  <h3 className="font-semibold text-lg">{user.username}</h3>
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleOpenDialog(user)}
-                    className="h-8 w-8"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  {user.id !== currentUserId && (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Rolle</TableHead>
+                <TableHead className="text-center">Wünsche verwalten</TableHead>
+                <TableHead className="text-center">Design ändern</TableHead>
+                <TableHead className="text-right">Aktionen</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2 min-w-[8rem]">
+                      {user.role === "admin" ? (
+                        <Shield className="w-4 h-4 text-primary shrink-0" />
+                      ) : (
+                        <UserIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                      )}
+                      <span className="font-semibold">
+                        {user.username}
+                        {user.id === currentUserId && (
+                          <span className="ml-1.5 text-xs font-normal text-muted-foreground">(du)</span>
+                        )}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={user.role === "admin" ? "default" : "secondary"}>
+                      {user.role === "admin" ? "Admin" : "Benutzer"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <PermissionMark on={user.can_manage_requests} />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <PermissionMark on={user.can_change_theme} />
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(user.id)}
-                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleOpenDialog(user)}
+                      className="h-9 w-9"
+                      title="Bearbeiten"
+                      aria-label={`${user.username} bearbeiten`}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Pencil className="w-4 h-4" />
                     </Button>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-2">
-                <Badge variant={user.role === "admin" ? "default" : "secondary"}>
-                  {user.role === "admin" ? "Admin" : "Benutzer"}
-                </Badge>
-                {user.can_manage_requests && (
-                  <Badge variant="outline">Wünsche verwalten</Badge>
-                )}
-                {user.can_change_theme && (
-                  <Badge variant="outline">Design ändern</Badge>
-                )}
-              </div>
-            </Card>
-          ))}
+                    {user.id !== currentUserId && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setUserToDelete(user)}
+                        className="h-9 w-9 text-destructive hover:text-destructive"
+                        title="Löschen"
+                        aria-label={`${user.username} löschen`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </Card>
+
+      <ConfirmDialog
+        open={userToDelete !== null}
+        onOpenChange={(open) => !open && setUserToDelete(null)}
+        title="Benutzer löschen?"
+        description={`„${userToDelete?.username ?? ""}“ wird mit allen Rechten gelöscht. Das kann nicht rückgängig gemacht werden.`}
+        onConfirm={() => {
+          if (userToDelete) handleDelete(userToDelete.id);
+          setUserToDelete(null);
+        }}
+      />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -391,3 +426,10 @@ export const UserManagement = ({ currentUserId }: UserManagementProps) => {
     </>
   );
 };
+
+const PermissionMark = ({ on }: { on: boolean }) =>
+  on ? (
+    <Check className="w-5 h-5 text-green-600 mx-auto" aria-label="ja" />
+  ) : (
+    <Minus className="w-4 h-4 text-muted-foreground/50 mx-auto" aria-label="nein" />
+  );

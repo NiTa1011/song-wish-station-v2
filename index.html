@@ -2,6 +2,19 @@
 <html lang="en">
   <head>
     <script>
+      // Lite mode for weak devices (e.g. smartboards): ?lite=1 enables (remembered), ?lite=0 disables
+      (function() {
+        try {
+          var lite = new URLSearchParams(window.location.search).get("lite");
+          if (lite === "1") localStorage.setItem("lite-mode", "1");
+          if (lite === "0") localStorage.removeItem("lite-mode");
+          if (localStorage.getItem("lite-mode") === "1") {
+            document.documentElement.classList.add("lite");
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script>
       (function() {
         try {
           var cachedTheme = localStorage.getItem("active-theme-data");

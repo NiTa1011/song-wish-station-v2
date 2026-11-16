@@ -21,6 +21,8 @@ interface BurstPiece {
   size: number;
 }
 
+let burstId = 0;
+
 export const FaschingBackground: React.FC = () => {
   // Stable falling confetti pieces
   const pieces = useMemo<ConfettiPiece[]>(() => {
@@ -33,9 +35,9 @@ export const FaschingBackground: React.FC = () => {
     ];
     const shapes: ("circle" | "rect" | "star")[] = ["circle", "rect", "rect", "star"];
 
-    return Array.from({ length: 42 }, (_, i) => ({
+    return Array.from({ length: 32 }, (_, i) => ({
       id: i,
-      left: (i * 2.4 + Math.sin(i) * 3) % 100,
+      left: (i * 3.2 + Math.sin(i) * 3 + 100) % 100,
       size: 6 + ((i * 3) % 8),
       duration: 4.5 + ((i * 1.3) % 5.5),
       delay: (i * 0.22) % 6,
@@ -57,11 +59,11 @@ export const FaschingBackground: React.FC = () => {
       "hsl(165 85% 42%)",
     ];
 
-    const newPieces: BurstPiece[] = Array.from({ length: 18 }, (_, i) => {
-      const angle = (i / 18) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+    const newPieces: BurstPiece[] = Array.from({ length: 14 }, (_, i) => {
+      const angle = (i / 14) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
       const speed = 60 + Math.random() * 90;
       return {
-        id: Date.now() + i,
+        id: ++burstId,
         x: e.clientX,
         y: e.clientY,
         vx: Math.cos(angle) * speed,
@@ -73,9 +75,10 @@ export const FaschingBackground: React.FC = () => {
 
     setBursts((prev) => [...prev.slice(-36), ...newPieces]);
 
-    // Clean up after 1.2s
+    // Clean up after the animation finished
+    const ids = new Set(newPieces.map((np) => np.id));
     setTimeout(() => {
-      setBursts((prev) => prev.filter((p) => !newPieces.some((np) => np.id === p.id)));
+      setBursts((prev) => prev.filter((p) => !ids.has(p.id)));
     }, 1200);
   }, []);
 
@@ -86,14 +89,14 @@ export const FaschingBackground: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 pointer-events-none overflow-hidden z-0"
+      className="theme-decor fixed inset-0 pointer-events-none overflow-hidden z-0"
       aria-hidden="true"
     >
-      {/* Warm celebratory ambient lighting orbs */}
-      <div className="absolute top-[-10%] right-[10%] w-[50vw] h-[50vw] min-w-[320px] rounded-full bg-[hsl(340_90%_56%/0.12)] blur-[120px] pointer-events-none" />
-      <div className="absolute top-[30%] left-[-10%] w-[55vw] h-[55vw] min-w-[350px] rounded-full bg-[hsl(280_85%_58%/0.12)] blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-5%] w-[45vw] h-[45vw] min-w-[300px] rounded-full bg-[hsl(45_100%_52%/0.14)] blur-[110px] pointer-events-none" />
-      <div className="absolute bottom-[20%] left-[20%] w-[40vw] h-[40vw] min-w-[280px] rounded-full bg-[hsl(165_85%_42%/0.1)] blur-[100px] pointer-events-none" />
+      {/* Warm celebratory ambient lighting orbs (radial gradients instead of blur filters) */}
+      <div className="absolute top-[-25%] right-[0%] w-[70vw] h-[70vw] min-w-[420px] min-h-[420px] rounded-full" style={{ background: "radial-gradient(circle, hsl(340 90% 56% / 0.12) 0%, transparent 65%)" }} />
+      <div className="absolute top-[15%] left-[-25%] w-[75vw] h-[75vw] min-w-[450px] min-h-[450px] rounded-full" style={{ background: "radial-gradient(circle, hsl(280 85% 58% / 0.12) 0%, transparent 65%)" }} />
+      <div className="absolute bottom-[-25%] right-[-15%] w-[65vw] h-[65vw] min-w-[400px] min-h-[400px] rounded-full" style={{ background: "radial-gradient(circle, hsl(45 100% 52% / 0.14) 0%, transparent 65%)" }} />
+      <div className="absolute bottom-[5%] left-[10%] w-[60vw] h-[60vw] min-w-[380px] min-h-[380px] rounded-full" style={{ background: "radial-gradient(circle, hsl(165 85% 42% / 0.1) 0%, transparent 65%)" }} />
 
       {/* Sweeping Carnival Stage Spotlights */}
       <div
@@ -101,8 +104,8 @@ export const FaschingBackground: React.FC = () => {
         style={{
           background:
             "linear-gradient(90deg, transparent, hsl(45 100% 55% / 0.3) 50%, transparent)",
-          filter: "blur(28px)",
           animation: "beam-sweep 12s ease-in-out infinite alternate",
+          willChange: "transform, opacity",
         }}
       />
       <div
@@ -110,14 +113,14 @@ export const FaschingBackground: React.FC = () => {
         style={{
           background:
             "linear-gradient(90deg, transparent, hsl(340 90% 60% / 0.25) 50%, transparent)",
-          filter: "blur(28px)",
           animation: "beam-sweep 15s ease-in-out infinite alternate-reverse",
+          willChange: "transform, opacity",
         }}
       />
 
       {/* Ornate Venetian Masquerade Mask Watermark in Top Center */}
       <div className="absolute top-8 left-1/2 -translate-x-1/2 w-72 h-44 md:w-96 md:h-56 opacity-15 md:opacity-20 pointer-events-none">
-        <svg viewBox="0 0 200 120" className="w-full h-full drop-shadow-md">
+        <svg viewBox="0 0 200 120" className="w-full h-full">
           <defs>
             <linearGradient id="mask-gold" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="hsl(45 100% 55%)" />
@@ -202,8 +205,6 @@ export const FaschingBackground: React.FC = () => {
             stroke="url(#streamer-gold)"
             strokeWidth="9"
             strokeLinecap="round"
-            className="animate-pulse"
-            style={{ animationDuration: "5s" }}
           />
           {/* Spiral Ribbon 2 */}
           <path
@@ -212,8 +213,6 @@ export const FaschingBackground: React.FC = () => {
             stroke="url(#streamer-pink)"
             strokeWidth="7"
             strokeLinecap="round"
-            className="animate-pulse"
-            style={{ animationDuration: "7s", animationDelay: "1s" }}
           />
         </svg>
       </div>
@@ -240,8 +239,6 @@ export const FaschingBackground: React.FC = () => {
             stroke="url(#streamer-turquoise)"
             strokeWidth="8"
             strokeLinecap="round"
-            className="animate-pulse"
-            style={{ animationDuration: "6s", animationDelay: "0.5s" }}
           />
           <path
             d="M 70,0 Q 30,55 70,110 T 70,220 T 70,330 T 70,440 T 70,550"
@@ -249,8 +246,6 @@ export const FaschingBackground: React.FC = () => {
             stroke="url(#streamer-violet)"
             strokeWidth="6"
             strokeLinecap="round"
-            className="animate-pulse"
-            style={{ animationDuration: "8s", animationDelay: "1.5s" }}
           />
         </svg>
       </div>
@@ -268,8 +263,8 @@ export const FaschingBackground: React.FC = () => {
               height: piece.shape === "rect" ? `${piece.size * 1.5}px` : `${piece.size}px`,
               backgroundColor: piece.shape !== "star" ? piece.color : "transparent",
               borderRadius: piece.shape === "circle" ? "50%" : "2px",
-              boxShadow: `0 0 6px ${piece.color}`,
               opacity: 0.85,
+              willChange: "transform",
               animation: `confetti-fall ${piece.duration}s linear ${piece.delay}s infinite`,
               transform: `rotate(${piece.rotation}deg)`,
             }}
@@ -287,18 +282,17 @@ export const FaschingBackground: React.FC = () => {
       {bursts.map((b) => (
         <div
           key={b.id}
-          className="absolute rounded-full pointer-events-none transition-transform"
+          className="burst absolute rounded-full pointer-events-none"
           style={{
             left: `${b.x}px`,
             top: `${b.y}px`,
             width: `${b.size}px`,
             height: `${b.size}px`,
             backgroundColor: b.color,
-            boxShadow: `0 0 10px ${b.color}`,
-            transform: `translate(${b.vx}px, ${b.vy}px) scale(0)`,
-            transition: "transform 1.1s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 1.1s ease-out",
-            opacity: 0,
-          }}
+            animation: "confetti-burst 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards",
+            "--bx": `${b.vx}px`,
+            "--by": `${b.vy}px`,
+          } as React.CSSProperties}
         />
       ))}
     </div>

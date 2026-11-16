@@ -3,9 +3,9 @@ import React, { useMemo } from "react";
 export const HalloweenBackground: React.FC = () => {
   // Rising embers and spectral wisps
   const embers = useMemo(() => {
-    return Array.from({ length: 26 }, (_, i) => ({
+    return Array.from({ length: 18 }, (_, i) => ({
       id: i,
-      left: 5 + ((i * 3.8) % 90),
+      left: 5 + ((i * 5.3) % 90),
       size: 2 + ((i * 2) % 6),
       delay: (i * 0.35) % 7,
       duration: 5 + ((i * 1.2) % 7),
@@ -15,26 +15,30 @@ export const HalloweenBackground: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 pointer-events-none overflow-hidden z-0"
+      className="theme-decor fixed inset-0 pointer-events-none overflow-hidden z-0"
       aria-hidden="true"
     >
-      {/* Ambient background glows */}
-      <div className="absolute top-10 right-10 w-96 h-96 rounded-full bg-[hsl(28_100%_50%/0.12)] blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-10 left-10 w-[500px] h-[500px] rounded-full bg-[hsl(135_90%_45%/0.1)] blur-[140px] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/3 w-80 h-80 rounded-full bg-[hsl(270_70%_48%/0.12)] blur-[100px] pointer-events-none" />
+      {/* Ambient background glows (radial gradients instead of blur filters) */}
+      <div className="absolute -top-16 -right-16 w-[40rem] h-[40rem] rounded-full" style={{ background: "radial-gradient(circle, hsl(28 100% 50% / 0.12) 0%, transparent 65%)" }} />
+      <div className="absolute -bottom-40 -left-40 w-[50rem] h-[50rem] rounded-full" style={{ background: "radial-gradient(circle, hsl(135 90% 45% / 0.1) 0%, transparent 65%)" }} />
+      <div className="absolute top-1/3 left-1/4 w-[34rem] h-[34rem] rounded-full" style={{ background: "radial-gradient(circle, hsl(270 70% 48% / 0.12) 0%, transparent 65%)" }} />
 
       {/* Atmospheric Full Moon with Lunar Halos */}
       <div className="absolute top-6 right-6 md:top-12 md:right-16 w-36 h-36 md:w-56 md:h-56 pointer-events-none">
         {/* Outer Lunar Halo */}
         <div
-          className="absolute inset-[-30%] rounded-full bg-gradient-to-r from-[hsl(28_100%_52%/0.2)] to-[hsl(135_80%_45%/0.12)] blur-3xl animate-pulse"
-          style={{ animationDuration: "6s" }}
+          className="absolute inset-[-45%] rounded-full animate-pulse"
+          style={{
+            background: "radial-gradient(circle, hsl(40 100% 60% / 0.3) 0%, hsl(28 100% 52% / 0.15) 35%, hsl(135 80% 45% / 0.06) 55%, transparent 70%)",
+            animationDuration: "6s",
+            willChange: "opacity",
+          }}
         />
 
         {/* Realistic Detailed Moon SVG */}
         <svg
           viewBox="0 0 100 100"
-          className="w-full h-full drop-shadow-[0_0_35px_rgba(255,200,100,0.45)]"
+          className="relative w-full h-full"
         >
           <defs>
             <radialGradient id="moon-body" cx="40%" cy="40%" r="55%">
@@ -64,12 +68,12 @@ export const HalloweenBackground: React.FC = () => {
 
         {/* Translucent Misty Clouds drifting over Moon */}
         <div
-          className="absolute top-1/4 -left-10 w-[140%] h-8 bg-gradient-to-r from-transparent via-[hsl(245_35%_12%/0.7)] to-transparent blur-md"
-          style={{ animation: "cloud-drift 24s linear infinite" }}
+          className="absolute top-1/4 -left-10 w-[140%] h-8 rounded-full bg-gradient-to-r from-transparent via-[hsl(245_35%_12%/0.6)] to-transparent"
+          style={{ animation: "cloud-drift 24s linear infinite", willChange: "transform, opacity" }}
         />
         <div
-          className="absolute bottom-1/4 -right-10 w-[130%] h-6 bg-gradient-to-r from-transparent via-[hsl(245_35%_10%/0.65)] to-transparent blur-md"
-          style={{ animation: "cloud-drift 18s linear infinite reverse" }}
+          className="absolute bottom-1/4 -right-10 w-[130%] h-6 rounded-full bg-gradient-to-r from-transparent via-[hsl(245_35%_10%/0.55)] to-transparent"
+          style={{ animation: "cloud-drift 18s linear infinite reverse", willChange: "transform, opacity" }}
         />
       </div>
 
@@ -104,15 +108,15 @@ export const HalloweenBackground: React.FC = () => {
       {/* Flying Bats Silhouettes */}
       <div
         className="absolute top-24 right-44 md:right-72 w-10 h-6 opacity-75 pointer-events-none"
-        style={{ animation: "bat-fly-1 15s ease-in-out infinite" }}
+        style={{ animation: "bat-fly-1 15s ease-in-out infinite", willChange: "transform" }}
       >
-        <svg viewBox="0 0 40 22" className="w-full h-full fill-[hsl(245_40%_10%)] drop-shadow-sm">
+        <svg viewBox="0 0 40 22" className="w-full h-full fill-[hsl(245_40%_10%)]">
           <path d="M 20,8 C 16,3 10,0 4,2 C 0,3 0,8 3,11 C 7,14 11,11 14,14 C 16,16 18,18 20,20 C 22,18 24,16 26,14 C 29,11 33,14 37,11 C 40,8 40,3 36,2 C 30,0 24,3 20,8 Z" />
         </svg>
       </div>
       <div
         className="absolute top-36 right-20 md:right-40 w-7 h-4 opacity-60 pointer-events-none"
-        style={{ animation: "bat-fly-2 19s ease-in-out 3s infinite" }}
+        style={{ animation: "bat-fly-2 19s ease-in-out 3s infinite", willChange: "transform" }}
       >
         <svg viewBox="0 0 40 22" className="w-full h-full fill-[hsl(245_40%_12%)]">
           <path d="M 20,8 C 16,3 10,0 4,2 C 0,3 0,8 3,11 C 7,14 11,11 14,14 C 16,16 18,18 20,20 C 22,18 24,16 26,14 C 29,11 33,14 37,11 C 40,8 40,3 36,2 C 30,0 24,3 20,8 Z" />
@@ -120,7 +124,7 @@ export const HalloweenBackground: React.FC = () => {
       </div>
       <div
         className="absolute top-16 right-16 md:right-32 w-5 h-3 opacity-40 pointer-events-none"
-        style={{ animation: "bat-fly-1 23s ease-in-out 7s infinite" }}
+        style={{ animation: "bat-fly-1 23s ease-in-out 7s infinite", willChange: "transform" }}
       >
         <svg viewBox="0 0 40 22" className="w-full h-full fill-[hsl(245_40%_15%)]">
           <path d="M 20,8 C 16,3 10,0 4,2 C 0,3 0,8 3,11 C 7,14 11,11 14,14 C 16,16 18,18 20,20 C 22,18 24,16 26,14 C 29,11 33,14 37,11 C 40,8 40,3 36,2 C 30,0 24,3 20,8 Z" />
@@ -139,10 +143,10 @@ export const HalloweenBackground: React.FC = () => {
             style={{
               left: `${ember.left}%`,
               bottom: "-15px",
-              width: `${ember.size}px`,
-              height: `${ember.size}px`,
-              backgroundColor: color,
-              boxShadow: `0 0 ${ember.size * 3}px ${color}`,
+              width: `${ember.size * 4}px`,
+              height: `${ember.size * 4}px`,
+              background: `radial-gradient(circle, ${color} 0%, ${color} 22%, transparent 70%)`,
+              willChange: "transform, opacity",
               opacity: isSpectral ? 0.7 : 0.85,
               animation: `ember-rise ${ember.duration}s ease-out ${ember.delay}s infinite`,
             }}
@@ -152,17 +156,26 @@ export const HalloweenBackground: React.FC = () => {
 
       {/* Rolling Cemetery Ground Mist / Fog Layers */}
       <div
-        className="absolute bottom-0 left-0 w-[200%] h-36 bg-gradient-to-t from-[hsl(245_35%_6%/0.9)] via-[hsl(135_60%_20%/0.15)] to-transparent blur-xl pointer-events-none"
-        style={{ animation: "fog-drift 22s ease-in-out infinite alternate" }}
+        className="absolute bottom-0 left-0 w-[200%] h-36 bg-gradient-to-t from-[hsl(245_35%_6%/0.9)] via-[hsl(135_60%_20%/0.15)] to-transparent pointer-events-none"
+        style={{ animation: "fog-drift 22s ease-in-out infinite alternate", willChange: "transform" }}
       />
       <div
-        className="absolute bottom-0 right-0 w-[180%] h-28 bg-gradient-to-t from-[hsl(245_35%_7%/0.8)] via-[hsl(28_80%_20%/0.12)] to-transparent blur-lg pointer-events-none"
-        style={{ animation: "fog-drift 17s ease-in-out 4s infinite alternate-reverse" }}
+        className="absolute bottom-0 right-0 w-[180%] h-28 bg-gradient-to-t from-[hsl(245_35%_7%/0.8)] via-[hsl(28_80%_20%/0.12)] to-transparent pointer-events-none"
+        style={{ animation: "fog-drift 17s ease-in-out 4s infinite alternate-reverse", willChange: "transform" }}
       />
 
       {/* Carved Glowing Jack-o'-Lantern Candlelight Silhouette in bottom-left */}
       <div className="absolute bottom-3 left-4 md:bottom-6 md:left-10 w-20 h-20 md:w-28 md:h-28 opacity-75 md:opacity-85 pointer-events-none">
-        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(255,120,0,0.6)]">
+        {/* Candle glow flicker (opacity-only animation on its own layer) */}
+        <div
+          className="absolute inset-[-35%] rounded-full animate-pulse"
+          style={{
+            background: "radial-gradient(circle, hsl(28 100% 50% / 0.55) 0%, hsl(28 100% 50% / 0.2) 40%, transparent 70%)",
+            animationDuration: "2s",
+            willChange: "opacity",
+          }}
+        />
+        <svg viewBox="0 0 100 100" className="relative w-full h-full">
           {/* Pumpkin Stem */}
           <path d="M 50,15 Q 52,6 59,8 Q 55,14 51,18 Z" fill="#2d3b1e" />
 
@@ -175,13 +188,7 @@ export const HalloweenBackground: React.FC = () => {
           />
 
           {/* Candlelight Glowing Carvings (Eyes, Nose, Grin) with flicker */}
-          <g
-            className="animate-pulse"
-            style={{
-              animationDuration: "2s",
-              filter: "drop-shadow(0 0 6px hsl(33 100% 50%))",
-            }}
-          >
+          <g>
             {/* Left Eye */}
             <polygon points="32,44 42,48 35,55" fill="hsl(33 100% 50%)" />
             {/* Right Eye */}

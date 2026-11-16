@@ -1,12 +1,14 @@
 import React from "react";
-import { useActiveTheme } from "@/hooks/useActiveTheme";
 import { DefaultBackground } from "./themes/DefaultBackground";
 import { HalloweenBackground } from "./themes/HalloweenBackground";
 import { FaschingBackground } from "./themes/FaschingBackground";
 
-export const ThemeDecorations: React.FC = () => {
-  const activeTheme = useActiveTheme();
-
+// Memoized: the form re-renders on every keystroke, the background must not.
+export const ThemeDecorations = React.memo(function ThemeDecorations({
+  activeTheme,
+}: {
+  activeTheme: string;
+}) {
   if (activeTheme === "halloween") {
     return <HalloweenBackground />;
   }
@@ -16,4 +18,4 @@ export const ThemeDecorations: React.FC = () => {
   }
 
   return <DefaultBackground />;
-};
+});
